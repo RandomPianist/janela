@@ -57,9 +57,20 @@ janela.renderizar({
 );
 
 Todos os valores do objeto dados podem ser omitidos, e, nesse caso, assumirão seu valor padrão.
+Os parâmetros altura e largura, se 0, assumirão valor dinâmico. Se -1 ou inválidos, assumirão seu valor padrão.
+Para melhora de funções relacionadas à responsividade, esses parâmetros podem ser alterados pela função janela.dimensionar(altura, largura), explicada abaixo. 
 Se o objeto botoes não for definido, um botão Ok será criado, com a função de fechar a janela.
 A variável manter_aberto pode ser omitida, mas é importante perceber que O VALOR ATRIBUÍDO AO TEXTO DOS BOTÕES É UM ARRAY, portanto
 O USO DE COLCHETES NÃO É OPCIONAL, ainda que este array contenha apenas um elemento.
+
+Há ainda uma quinta função que pode ser utilizada, que tem a finalidade de modificar as dimensões da janela sem precisar renderizá-la novamente.
+
+janela.dimensionar(altura, largura);
+Esta função pode ser usada apenas após a criação de uma janela.
+É utilizada para melhora de funções relacionadas à responsividade.
+Os parâmetros altura e largura, se 0, assumirão valor dinâmico; se -1, permanecerão inalterados; se inválidos ou omitidos, assumirão seu valor padrão.
+Se desejarmos alterar a largura da janela, não podemos omitir o valor de altura, mas podemos alterá-lo para -1.
+Os valores de dimensões, se configurados para números maiores que o tamanho da janela do usuário, assumirão valor dinâmico.
 
 Em caso de dúvidas, consulte os exemplos abaixo.
 */
@@ -70,8 +81,12 @@ Em caso de dúvidas, consulte os exemplos abaixo.
 //Não é necessário deletá-la para utilizar todas as opções da função renderizar.
 
 var janelaPreferencias = [
-	200, //Essa será a largura padrão das janelas, se não alterada pela função renderizar.
-	600, //Essa será a altura padrão das janelas, se não alterada pela função renderizar.
+	0, 
+	//Acima está a variável altura. Esta será a largura padrão das janelas, se não alterada pela função renderizar.
+	//Se 0, assumirá valor dinâmico; se -1, assumirá seu valor padrão (200).
+	0,
+	//Acima está a variável largura. Esta será a largura padrão das janelas, se não alterada pela função renderizar.
+	//Se 0, assumirá valor dinâmico; se -1, assumirá seu valor padrão (600).
 	"Aviso", //Esse será o título padrão das janelas, se não alterado pela função renderizar.
 	//Trecho em HTML - INÍCIO
 	"<p align = 'center'>" + 
@@ -152,12 +167,29 @@ function Janela(padrao) {
 	var dicionarioFuncoes = new Array();
 	var novo = new Array();
 	var erroInseriu = "Você não inseriu uma função de continuação.<br>Leia novamente a documentação desta função.";
+	if (padrao !== undefined) novo = padrao;
+	var dimensoesPadrao = [200, 600];
+	var fromClass = 0;
+	
+	var parametrosPadrao = novo.length > 0 ? novo : [
+		...dimensoesPadrao,
+		"Aviso",
+		"<p align = 'center'>Ocorreu um erro.<br>Nenhum texto foi inserido nessa janela.<br>Para inserir textos, use o parâmetro <u>conteudo</u></p>",
+		true,
+		"C5D8D1",
+		"F4D1AE",
+		"12263A"
+	];
+	
+	if (parametrosPadrao[0] < 0) parametrosPadrao[0] = dimensoesPadrao[0];
+	if (parametrosPadrao[1] < 0) parametrosPadrao[1] = dimensoesPadrao[1];
 	
 	this.alerta = function(texto) {
 		this.renderizar({
 			"conteudo" : texto,
 			"permitir" : false
 		});
+		this.dimensionar(...dimensoesPadrao);
 	}
 	
 	this.confirma = function(continuacao, texto) {
@@ -171,6 +203,7 @@ function Janela(padrao) {
 				"Não" : ["janela.resposta = false;" + continuacao]
 			});
 		} else this.alerta(erroInseriu);
+		this.dimensionar(...dimensoesPadrao);
 	}
 	
 	this.prompt = function(continuacao, texto, def) {
@@ -185,6 +218,7 @@ function Janela(padrao) {
 				"Cancelar" : ["janela.promptResposta(false);" + continuacao]
 			});
 		} else this.alerta(erroInseriu);
+		this.dimensionar(...dimensoesPadrao);
 	}
 	
 	this.promptResposta = function(escrever) {
@@ -206,16 +240,6 @@ function Janela(padrao) {
 			"cor_fundo_titulo",
 			"cor_texto"
 		];
-		var parametrosPadrao = novo.length > 0 ? novo : [
-			200,
-			600,
-			"Aviso",
-			"<p align = 'center'>Ocorreu um erro.<br>Nenhum texto foi inserido nessa janela.<br>Para inserir textos, use o parâmetro <u>conteudo</u></p>",
-			true,
-			"C5D8D1",
-			"F4D1AE",
-			"12263A"
-		];
 		var parametros = new Array();
 		for (var i = 0; i < parametrosTexto.length; i++) {
 			try {
@@ -225,9 +249,6 @@ function Janela(padrao) {
 				parametros[parametrosTexto[i]] = parametrosPadrao[i];
 			}
 		}
-		document.getElementById("janela").style = "display:block;width:" + parametros["largura"] + "px;height:" + parametros["altura"] + "px";
-		this.info = [parametros["altura"], parametros["largura"]];
-		this.redimensionar();
 		document.getElementById("janelaCobrir").style = "display:block;height:" + window.innerHeight + "px";
 		document.getElementById("janelaTopo").innerHTML = "<b>" + parametros["titulo"] + "</b>";
 		document.getElementById("janelaMeio").innerHTML = parametros["conteudo"];
@@ -258,12 +279,34 @@ function Janela(padrao) {
 			cont2++;
 		}
 		document.getElementById("janelaRodape").innerHTML = resultado;
-		var chegada = document.getElementById("janelaTopo").offsetHeight;
-		var aux = document.getElementById("janelaMeio").offsetHeight;
-		while (chegada + aux + document.getElementById("janelaRodape").offsetHeight < this.info[0] - chegada) {
-			document.getElementById("janelaMeio").style.height = (aux + 1) + "px";
-			aux = document.getElementById("janelaMeio").offsetHeight;
+		this.dimensionar(parametros["altura"], parametros["largura"]);
+		fromClass = 1;
+	}
+	
+	this.dimensionar = function(altura, largura) {
+		document.getElementById("janelaMeio").style.height = "";
+		document.getElementById("janela").style.display = "block";
+		var dimensoes = [altura, largura];
+		for (var i = 0; i < 2; i++) {
+			if (dimensoes[i] === undefined) dimensoes[i] = parametrosPadrao[i];
+			if (parseInt(dimensoes[i]) != dimensoes[i]) dimensoes[i] = parametrosPadrao[i];
+			dimensoes[i] = parseInt(dimensoes[i]);
+			if ((i == 0 && (dimensoes[i] > window.innerHeight)) || (i == 1 && dimensoes[i] > window.innerWidth)) dimensoes[i] = 0;
+			if (dimensoes[i] + fromClass < 0) dimensoes[i] = parametrosPadrao[i];
+			if (dimensoes[i] != -1) {
+				var aux = dimensoes[i] > 0 ? dimensoes[i] + "px" : "";
+				if (i == 0) document.getElementById("janela").style.height = aux;
+				else document.getElementById("janela").style.width = aux;
+			}
+			if (dimensoes[i] < 1) {
+				this.info[i] = i == 0 ? document.getElementById("janela").offsetHeight : document.getElementById("janela").offsetWidth;
+			} else this.info[i] = dimensoes[i];
 		}
+		if (dimensoes[0] != 0) {
+			var aux = this.info[0] - ((document.getElementById("janelaTopo").offsetHeight + document.getElementById("janelaRodape").offsetHeight) * 1.7);
+			document.getElementById("janelaMeio").style.height = aux + "px";
+		}
+		this.redimensionar();
 	}
 	
 	this.redimensionar = function() {
@@ -310,8 +353,6 @@ function Janela(padrao) {
 	this.resposta = false;
 	this.clique = false;
 	this.info = new Array();
-	
-	if (padrao !== undefined) novo = padrao;
 }
 </script>
 
