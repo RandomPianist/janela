@@ -1,0 +1,320 @@
+<script>
+/*
+===============================
+|NÃO COMERCIALIZE ESSE SCRIPT!|
+===============================
+
+JANELA PERSONALIZADA, por Reynolds Costa
+
+Esse script tem a finalidade de simular os comandos alert, confirm e prompt, com uma estética melhorada e com a possibilidade de
+inclusão de códigos html, trazendo, assim, a capacidade de trabalhar com páginas inteiras dentro de uma simples caixa de diálogo.
+
+Existem várias formas de usá-lo. Ao alterar as configurações na variável janelaPreferencias, você alterará as configurações padrão
+para toda a sua página. Há ainda como alterá-las caso a caso.
+
+As funções básicas disponíveis são:
+
+janela.alerta(texto);
+Cria um alerta.
+Análoga à função alert();
+Se omitido, o parâmetro texto assumirá o valor padrão.
+
+janela.confirma(continuacao, texto);
+Cria uma janela de confirmação.
+Análoga à função confirm();
+O resultado é armazenado em janela.resposta. Para buscá-lo, use a função em continuacao. Veja mais detalhes no exemplo.
+O parâmetro continuacao é obrigatório. Omití-lo resultará em erro.
+O parâmetro texto é opcional. Se omitido, assumirá o valor padrão.
+
+janela.prompt(continuacao, texto, def);
+Cria um prompt para inserção de dados.
+Análoga à função prompt();
+Ao clicar em Ok, o resultado é armazenado em janela.resposta.
+Ao clicar em Cancelar, janela.resposta receberá falso.
+Para buscá-lo, use a funcao em continuacao. Veja mais detalhes no exemplo.
+O parâmetro continuacao é obrigatório. Omití-lo resultará em erro.
+O parâmetro texto é opcional. Se omitido, assumirá o valor padrão.
+O parâmetro def é opcional. Se omitido, assumirá uma string vazia.
+
+Todas as funções acima herdam características e fazem uso da função janela.renderizar(dados, botoes), que pode ser usada para criar janelas avançadas.
+Para instanciá-la, usamos:
+
+janela.renderizar({
+		"altura" : valor_da_altura_da_janela_em_pixels,
+		"largura" : valor_da_largura_da_janela_em_pixels,
+		"titulo" : titulo_da_janela,
+		"conteudo" : conteudo_da_janela,
+		"permitir" : variavel_permitir (veja maiores explicações abaixo),
+		"cor_fundo_janela" : cor_de_fundo_da_janela_em_codigo_hexadecimal,
+		"cor_fundo_titulo" : cor_de_fundo_do_titulo_em_codigo_hexadecimal,
+		"cor_texto" : cor_do_texto_em_codigo_hexadecimal
+	},
+	{
+		"texto_do_botao1" : ["funcao_a_ser_executada_pelo_botao1(argumentos_desta_funcao)", variavel_manter_aberto (veja maiores explicações abaixo)],
+		"texto_do_botao2" : ["funcao_a_ser_executada_pelo_botao2(argumentos_desta_funcao)", variavel_manter_aberto],
+		"texto_do_botao3" : ["funcao_a_ser_executada_pelo_botao3(argumentos_desta_funcao)", variavel_manter_aberto],
+	}
+);
+
+Todos os valores do objeto dados podem ser omitidos, e, nesse caso, assumirão seu valor padrão.
+Se o objeto botoes não for definido, um botão Ok será criado, com a função de fechar a janela.
+A variável manter_aberto pode ser omitida, mas é importante perceber que O VALOR ATRIBUÍDO AO TEXTO DOS BOTÕES É UM ARRAY, portanto
+O USO DE COLCHETES NÃO É OPCIONAL, ainda que este array contenha apenas um elemento.
+
+Em caso de dúvidas, consulte os exemplos abaixo.
+*/
+
+//A partir daqui começam as PREFERÊNCIAS
+//Você pode mudá-las aqui para a página inteira ou trabalhá-las caso a caso na função renderizar.
+//Se você deletar essa variável, tudo será restaurado ao valor padrão e você terá que trabalhar as preferências caso a caso.
+//Não é necessário deletá-la para utilizar todas as opções da função renderizar.
+
+var janelaPreferencias = [
+	200, //Essa será a largura padrão das janelas, se não alterada pela função renderizar.
+	600, //Essa será a altura padrão das janelas, se não alterada pela função renderizar.
+	"Aviso", //Esse será o título padrão das janelas, se não alterado pela função renderizar.
+	//Trecho em HTML - INÍCIO
+	"<p align = 'center'>" + 
+	"Ocorreu um erro.<br>" +
+	"Nenhum texto foi inserido nessa janela.<br>" +
+	"Para inserir textos, use o parâmetro <u>conteudo</u>" +
+	"</p>",
+	//Trecho em HTML - FIM
+	//O trecho em HTML acima é o conteúdo de uma mensagem que não teve seu conteúdo definido.
+	//Não é recomendado alterá-lo, posto que, se visto, significará um erro que poderá ser corrigido mais facilmente com essas instruções.
+	true,
+	//Acima está a variável permitir. Se verdadeira, o usuário poderá fechar a janela apertando Esc ou clicando fora da área da janela.
+	//Se alterado aqui, valerá para a página inteira. Para alterar caso a caso, use a função renderizar.
+	//O valor dessa variável para a função renderizar é verdadeiro. Para as demais, como em suas funções análogas, é falso.
+	"C5D8D1", //Essa será a cor da área de fundo da janela, se não alterada pela função renderizar.
+	"F4D1AE", //Essa será a cor de fundo do título, se não alterada pela função renderizar.
+	"12263A" //Essa será a cor do texto da janela, se não alterada pela função renderizar.
+];
+
+/*
+SOBRE A VARIÁVEL manter_aberto
+
+A variável manter_aberto é um valor booleano, instanciado para cada botão de cada janela criada.
+Seu valor padrão é falso, e assume esse valor quando omitida.
+Se verdadeira, mantém a janela aberta após o usuário clicar no botão ao qual essa variável faz referência.
+Se falsa, a janela é fechada.
+*/
+
+//EXEMPLOS - INÍCIO
+//Por se tratar de um script que usa trechos em HTML, ele não pode ser carregado antes do carregamento da página.
+//No navegador, clique nos botões da página para ver o exemplo em ação.
+function oi() {
+	janela.confirma("oi_continuacao1();", "Oi! Você está tendo um bom dia?");
+}
+
+function oi_continuacao1() {
+	var mensagem = janela.resposta ? "Que bom! O que posso fazer para torná-lo ainda melhor?" : "Que pena, sinto muito por você. Como posso tornar seu dia melhor?";
+	janela.prompt("oi_continuacao2();", mensagem);
+}
+
+function oi_continuacao2() {
+	janela.alerta("Entendi! Eu vou tentar fazer isso assim que possível.<br>Até mais!");
+}
+//EXEMPLOS - FIM
+
+//Esse script reserva para si as palavras-chave Janela, janela, janelaPreferencias, janelaCobrir, janelaPrompt, janelaTopo,
+//janelaMeio e janelaRodape, e reescreve as funções window.onload, window.onresize, window.onkeydown e window.onclick.
+
+//A partir daqui começa o CÓDIGO propriamente dito.
+//Alterá-lo é desnecessário para a maioria das funções comuns.
+//Não altere se não souber o que está fazendo.
+
+var janela;
+
+window.onload = function() {
+	janela = new Janela(janelaPreferencias);
+	document.body.innerHTML = janela.html + document.body.innerHTML;
+}
+
+window.onresize = function() {
+	janela.redimensionar();
+}
+
+window.onkeydown = function() {
+	if (janela.permissao && event.keyCode == 27) janela.destruir();
+}
+
+window.onclick = function() {
+	if (janela.permissao && !document.getElementById("janela").contains(event.target)) {
+		if (janela.clique) {
+			janela.destruir();
+			janela.clique = false;
+		} else janela.clique = true;
+	}
+}
+
+function Janela(padrao) {
+	var dicionarioFuncoes = new Array();
+	var novo = new Array();
+	var erroInseriu = "Você não inseriu uma função de continuação.<br>Leia novamente a documentação desta função.";
+	
+	this.alerta = function(texto) {
+		this.renderizar({
+			"conteudo" : texto,
+			"permitir" : false
+		});
+	}
+	
+	this.confirma = function(continuacao, texto) {
+		if (continuacao !== undefined) {
+			this.renderizar({
+				"conteudo" : texto,
+				"titulo" : "Confirmação",
+				"permitir" : false
+			}, {
+				"Sim" : ["janela.resposta = true;" + continuacao],
+				"Não" : ["janela.resposta = false;" + continuacao]
+			});
+		} else this.alerta(erroInseriu);
+	}
+	
+	this.prompt = function(continuacao, texto, def) {
+		if (continuacao !== undefined) {
+			if (def === undefined) def = "";
+			this.renderizar({
+				"conteudo" : texto + "<br><input type = 'text' id = 'janelaPrompt' value = '" + def + "'/>",
+				"titulo" : "Inserção de Dados",
+				"permitir" : false
+			}, {
+				"Ok" : ["janela.promptResposta(true);" + continuacao, true],
+				"Cancelar" : ["janela.promptResposta(false);" + continuacao]
+			});
+		} else this.alerta(erroInseriu);
+	}
+	
+	this.promptResposta = function(escrever) {
+		if (escrever) {
+			this.resposta = document.getElementById("janelaPrompt").value;
+			this.destruir();
+		} else janela.resposta = false;
+	}
+	
+	this.renderizar = function(dados, botoes) {
+		dicionarioFuncoes = new Array();
+		var parametrosTexto = [
+			"altura",
+			"largura",
+			"titulo",
+			"conteudo",
+			"permitir",
+			"cor_fundo_janela",
+			"cor_fundo_titulo",
+			"cor_texto"
+		];
+		var parametrosPadrao = novo.length > 0 ? novo : [
+			200,
+			600,
+			"Aviso",
+			"<p align = 'center'>Ocorreu um erro.<br>Nenhum texto foi inserido nessa janela.<br>Para inserir textos, use o parâmetro <u>conteudo</u></p>",
+			true,
+			"C5D8D1",
+			"F4D1AE",
+			"12263A"
+		];
+		var parametros = new Array();
+		for (var i = 0; i < parametrosTexto.length; i++) {
+			try {
+				if (dados[parametrosTexto[i]] !== undefined && ((parseInt(dados[parametrosTexto[i]]) == dados[parametrosTexto[i]] && i < 2) || i >= 2)) parametros[parametrosTexto[i]] = dados[parametrosTexto[i]];
+				else parametros[parametrosTexto[i]] = parametrosPadrao[i];
+			} catch(err) {
+				parametros[parametrosTexto[i]] = parametrosPadrao[i];
+			}
+		}
+		document.getElementById("janela").style = "display:block;width:" + parametros["largura"] + "px;height:" + parametros["altura"] + "px";
+		this.info = [parametros["altura"], parametros["largura"]];
+		this.redimensionar();
+		document.getElementById("janelaCobrir").style = "display:block;height:" + window.innerHeight + "px";
+		document.getElementById("janelaTopo").innerHTML = "<b>" + parametros["titulo"] + "</b>";
+		document.getElementById("janelaMeio").innerHTML = parametros["conteudo"];
+		this.permissao = parametros["permitir"];
+		document.getElementById("janelaTopo").style.color = parametros["cor_texto"];
+		document.getElementById("janelaMeio").style.color = parametros["cor_texto"];
+		document.getElementById("janela").style.color = parametros["cor_texto"];
+		document.getElementById("janela").style.borderColor = parametros["cor_texto"];
+		document.getElementById("janela").style.backgroundColor = parametros["cor_fundo_titulo"];
+		document.getElementById("janelaTopo").style.backgroundColor = parametros["cor_fundo_titulo"];
+		document.getElementById("janelaMeio").style.backgroundColor = parametros["cor_fundo_janela"];
+		document.getElementById("janelaRodape").style.backgroundColor = parametros["cor_fundo_janela"];
+		var cont = 0;
+		if (botoes !== undefined) {
+			for (x in botoes) cont++;
+		}
+		if (cont == 0) {
+			botoes = {"Ok" : ["janela.destruir();", true]};
+			cont++;
+		}
+		var cont2 = 0;
+		var resultado = "";
+		for (x in botoes) {
+			dicionarioFuncoes[cont2] = botoes[x];
+			if (dicionarioFuncoes[cont2][1] === undefined) dicionarioFuncoes[cont2][1] = false;
+			resultado += "<button onclick = 'janela.executar(" + cont2 + ");'>" + x + "</button>";
+			if (cont2 < cont - 1) resultado += "&nbsp;&nbsp;";
+			cont2++;
+		}
+		document.getElementById("janelaRodape").innerHTML = resultado;
+		var chegada = document.getElementById("janelaTopo").offsetHeight;
+		var aux = document.getElementById("janelaMeio").offsetHeight;
+		while (chegada + aux + document.getElementById("janelaRodape").offsetHeight < this.info[0] - chegada) {
+			document.getElementById("janelaMeio").style.height = (aux + 1) + "px";
+			aux = document.getElementById("janelaMeio").offsetHeight;
+		}
+	}
+	
+	this.redimensionar = function() {
+		var altura = this.info[0];
+		var largura = this.info[1];
+		var aux = screen.width > screen.height ? window.innerHeight : screen.height;
+		var margem = (aux / 2) - (altura / 2);
+		document.getElementById("janela").style.top = margem + "px";
+		aux = screen.width > screen.height ? window.innerWidth : screen.width;
+		margem = (aux / 2) - (largura / 2);
+		document.getElementById("janela").style.left = margem + "px";
+	}
+	
+	this.executar = function(id) {
+		if (!dicionarioFuncoes[id][1]) this.destruir();
+		var tmp = new Function(dicionarioFuncoes[id][0]);
+		tmp();
+	}
+	
+	this.destruir = function() {
+		document.getElementById("janela").style.display = "none";
+		document.getElementById("janelaCobrir").style.display = "none";
+	}
+	
+	this.html = "<style type = 'text/css'>" +
+		"div.bordasJanela{padding:10px}" +
+		"#janelaPrompt{width:100%}" +
+		"#janelaCobrir{display:none;opacity:.8;position:fixed;top:0px;left:0px;background:#FFF;width:100%;z-index:2}" +
+		"#janela{display:none;position:fixed;border-width:2px;border-style:solid;border-radius:7px;z-index:3}" +
+		"#janela > div{margin:8px}" +
+		"#janela > div > #janelaMeio{padding:20px}" +
+		"#janela > div > #janelaRodape{text-align:right}" +
+	"</style>" +
+	"<div id = 'janelaCobrir'></div>" +
+	"<div id = 'janela'>" +
+		"<div>" +
+			"<div id = 'janelaTopo' class = 'bordasJanela'></div>" +
+			"<div id = 'janelaMeio'></div>" +
+			"<div id = 'janelaRodape' class = 'bordasJanela'></div>" +
+		"</div>" +
+	"</div>";
+	
+	this.permissao = true;
+	this.resposta = false;
+	this.clique = false;
+	this.info = new Array();
+	
+	if (padrao !== undefined) novo = padrao;
+}
+</script>
+
+<!--BOTÃO DOS EXEMPLOS - INÍCIO -->
+<button onclick = "oi();">Oi</button>
+<!--BOTÃO DOS EXEMPLOS - FIM -->
