@@ -1,0 +1,1 @@
+Esse script tem a finalidade de simular os comandos alert, confirm e prompt, com uma estética melhorada e com a possibilidade de inclusão de códigos html, trazendo, assim, a capacidade de trabalhar com páginas inteiras dentro de uma simples caixa de diálogo.
